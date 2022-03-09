@@ -79,11 +79,11 @@ int main(int argc, char *argv[]) {
             weights[j][i] = weights[i][j];
         }
     }
+    state.resize(V, vector<int>(((int)1 << V), INT_MAX));
+    path.resize(V, vector<int>(((int)1 << V), INT_MAX));
 
     gettimeofday(&tv0, &tz0);
 
-    state.resize(V, vector<int>(((int)1 << V), INT_MAX));
-    path.resize(V, vector<int>(((int)1 << V), INT_MAX));
     int min_weight = tsp(weights, path, 0, 1, state);
 
     gettimeofday(&tv1, &tz1);
