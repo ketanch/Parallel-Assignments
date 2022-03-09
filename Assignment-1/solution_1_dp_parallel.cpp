@@ -90,11 +90,11 @@ int main(int argc, char *argv[]) {
 
     int currPos = 0;
     int currVisited = 1;
-    cout << currPos << " ";
+    cout << currPos + 1 << " ";
     for (int i = 0; i < V - 1; i++) {
         currPos = path[currPos][currVisited];
         currVisited = currVisited | (1 << currPos);
-        cout << currPos << " ";
+        cout << currPos + 1 << " ";
     }
     cout << endl;
     cout << min_weight << endl;
