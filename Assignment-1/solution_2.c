@@ -1,41 +1,41 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <math.h>
 #include <omp.h>
 #include <sys/time.h>
 
-//#define LOCAL_TESTING
-
-void InitializeInput(int n, float L[n][n], float *Y, float *X) {
-    srand(time(NULL));
-
-    float a = 10.0;
-
+float** construct_L(int n) {
+    float *ptr = (float*) malloc(((n*(n+1))/2) * sizeof(float));
+    float **L = (float**) malloc(n * sizeof(float*));
     for (int i = 0; i < n; i++) {
-        for (int j = 0; j < i+1; j++) {
-            L[i][j] = (((float)rand()/(float)RAND_MAX) * a)+4;
-            L[i][j] = (int)L[i][j];
+        L[i] = ptr + (i*(i+1))/2;
+    }
+    return L;
+}
+
+void InitializeInput(int n, float **L, float *Y, float *X) {
+
+    for(int i = 0; i<n; i++){
+        for(int j = 0; j<i; j++){
+            L[i][j] = (1.0+j+i)/(j*i + 4);
         }
-        for (int j = i+1; j < n; j++)
-            L[i][j] = 0;
+        L[i][i] = (5.0*i)/(1.0*i + 8.0);
     }
+    L[0][0] = 1;
 
-    for (int i = 0; i < n; i++) {
-        X[i] = (int)(((float)rand()/(float)RAND_MAX) * a)+2;
-    }
-
+    for(int i = 0; i<n; i++)
+        X[i] = (i*2.0 + 5)/(i+10);
+    
     float sum;
-
     for (int i = 0; i < n; i++) {
         sum = 0;
-        for (int j = 0; j < n; j++)
+        for (int j = 0; j < i+1; j++)
             sum += L[i][j] * X[j];
         Y[i] = sum;
     }
 }
 
-void InitializeFromFile(FILE *filep, int n, float L[n][n], float *Y) {
+void InitializeFromFile(FILE *filep, int n, float **L, float *Y) {
     for (int i = 0; i < n; i++)
         for (int j = 0; j < i+1; j++)
             fscanf(filep, "%f", &L[i][j]);
@@ -53,13 +53,16 @@ int main(int argc, char *argv[]) {
     int nthreads;
 
 #ifdef LOCAL_TESTING
+
     n = atoi(argv[2]);
-    float L[n][n];
-    float Y[n];
-    float temp_X[n];
+    float **L = construct_L(n);
+    float *Y = (float*) malloc(n * sizeof(float));
+    float *temp_X = (float*) malloc(n * sizeof(float));
     InitializeInput(n, L, Y, temp_X);
     nthreads = atoi(argv[1]);
+
 #else
+
     if (argc < 4) {
         printf("Use ./%s <inp file> <out file> <num threads>\n", __FILE__);
         exit(0);
@@ -68,11 +71,14 @@ int main(int argc, char *argv[]) {
     FILE *out_filep = fopen(argv[2], "w");
 
     fscanf(inp_filep, "%d", &n);
-    float L[n][n];
-    float Y[n];
+    float **L = construct_L(n);
+    float *Y = (float*) malloc(n * sizeof(float));
     InitializeFromFile(inp_filep, n, L, Y);
+    fclose(inp_filep);
+
 #endif
-    float X[n];
+
+    float *X = (float*) malloc(n * sizeof(float));
 
     gettimeofday(&tv0, &tz0);
 
@@ -88,22 +94,26 @@ int main(int argc, char *argv[]) {
 #ifdef LOCAL_TESTING
 
     float variance = 0;
-
-    for (int i = 0; i < n; i++) {
+    int i = 0;
+    for (; i < n; i++) {
         variance += (temp_X[i] - X[i]) * (temp_X[i] - X[i]);
-        //printf("%d - %f %f %f %f\n", i, temp_X[i] - X[i], temp_X[i], X[i], variance);
     }
-    printf("Variance = %f\n", variance);
+    printf("Variance = %f\n", variance / i);
+    free(temp_X);
 
 #else
 
     for (int i = 0; i < n; i++) {
         fprintf(out_filep, "%f ", X[i]);
     }
+    fclose(out_filep);
 
 #endif
 
     printf("time: %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
+    free((void*)L);
+    free(X);
+    free(Y);
 
     return 0;
 }
