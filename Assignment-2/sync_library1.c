@@ -40,7 +40,17 @@ int TestAndSet(int *addr) {
     return old_val;
 }
 
-void FetchAndInc(int val, int *addr) {}
+int FetchAndInc(int *addr) {
+GetLock:
+    int old_val = *addr;
+    int new_val = old_val + 1;
+    int res = CompareAndSet(old_val, new_val, addr);
+    if (!res)
+        goto GetLock;
+    
+    return old_val;
+    
+}
 
 void Init_Lamport_Bakery(int nthread, int *choosing, int *ticket) {
     ticket = (int*) malloc(nthread * CACHE_LINE_SIZE);
@@ -90,6 +100,27 @@ void Release_TTS(int *addr) {
     *addr = 0;
 }
 
-void Acquire_Ticket_Lock() {}
+void Acquire_Ticket_Lock(int *ticket_addr, int *release_count_addr) {
+    int ticket = FetchAndInc(ticket_addr);
+    while (ticket != *release_count_addr);
+    return;
+}
 
-void Release_Ticket_Lock() {}
+void Release_Ticket_Lock(int *release_count_addr) {
+    *release_count_addr += 1;
+}
+
+int Acquire_Array_Lock(char **lock_arr, int arr_len, int *index) {
+    int th_index = FetchAndInc(index);
+    th_index *= CACHE_LINE_SIZE;
+    if (lock_arr[th_index])
+        while (lock_arr[th_index]);
+    while (!lock_arr[th_index]);
+    return th_index;
+}
+
+void Release_Array_Lock(char **lock_addr, int th_index) {
+    th_index *= CACHE_LINE_SIZE;
+    lock_addr[th_index] = 0;
+    lock_addr[th_index + CACHE_LINE_SIZE] = 1;
+}
