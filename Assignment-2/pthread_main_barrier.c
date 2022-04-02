@@ -8,12 +8,15 @@
 #define N 1000000
 
 int P;
-struct Central_Sense_Reversing_t barrier;
+Tree_Sense_Reversing_t barrier;
 
 void *forloop(void *p) {
-    int localsense = 1;
+    int tid = *(int *)p;
     for (int i = 0; i < N; i++) {
-        Central_Sense_Reversing_Wait(&barrier, &localsense, P);
+        if (tid == 0){
+            printf("%d\n", i);
+        }
+        Tree_Sense_Reversing_Wait(&barrier, tid, P);
     }
     return NULL;
 }
@@ -21,19 +24,24 @@ void *forloop(void *p) {
 int main(int argc, char **argv) {
     struct timeval tv0, tv1;
     struct timezone tz0, tz1;
-    P = atoi(argv[1]);
-
-    gettimeofday(&tv0, &tz0);
-
     pthread_attr_t attr;
     pthread_t *tid;
+    
+    P = atoi(argv[1]);
 
-    Central_Sense_Reversing_Init(&barrier);
+    
+    gettimeofday(&tv0, &tz0);
+
+
+    Tree_Sense_Reversing_Init(&barrier, P);
     tid = (pthread_t *)malloc(P * sizeof(pthread_t));
     pthread_attr_init(&attr);
+    int *id = (int *)malloc(P * sizeof(int));
+    for (int i = 0; i < P; i++) id[i] = i;
+
 
     for (int i = 0; i < P; i++) {
-        pthread_create(&tid[i], &attr, forloop, NULL);
+        pthread_create(&tid[i], &attr, forloop, &id[i]);
     }
 
     for (int i = 0; i < P; i++) {

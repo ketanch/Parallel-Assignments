@@ -27,3 +27,81 @@ void Central_Sense_Reversing_Wait(struct Central_Sense_Reversing_t *barrier, int
         }
     }
 }
+
+void Central_Posix_CV_Init(Central_Posix_CV_t *barrier) {
+    barrier->counter = 0;
+    pthread_cond_init(&barrier->cv, NULL);
+    pthread_mutex_init(&barrier->mutex, NULL);
+}
+
+void Central_Posix_CV_Wait(Central_Posix_CV_t *barrier, int num_threads) {
+    pthread_mutex_lock(&barrier->mutex);
+    barrier->counter++;
+    if (barrier->counter == num_threads) {
+        barrier->counter = 0;
+        pthread_cond_broadcast(&barrier->cv);
+    } else {
+        pthread_cond_wait(&barrier->cv, &barrier->mutex);
+    }
+    pthread_mutex_unlock(&barrier->mutex);
+}
+
+void Tree_Sense_Reversing_Init(Tree_Sense_Reversing_t *barrier, int num_threads) {
+    barrier->flag = (int **)malloc(sizeof(int *) * num_threads);
+    for (int i = 0; i < num_threads; i++) {
+        barrier->flag[i] = (int *)malloc(sizeof(int) * num_threads);
+        for (int j = 0; j < num_threads; j++) {
+            barrier->flag[i][j] = 0;
+        }
+    }
+}
+
+void Tree_Sense_Reversing_Wait(Tree_Sense_Reversing_t *barrier, int thread_id, int num_threads) {
+    unsigned int i, mask;
+    for (i = 0, mask = 1; (mask & thread_id) != 0; i++, mask <<= 1) {
+        while (!barrier->flag[thread_id][i]) {
+            asm("" ::
+                    : "memory");
+        }
+        barrier->flag[thread_id][i] = 0;
+    }
+
+    if ((thread_id < num_threads - 1) && (thread_id + mask <= num_threads - 1)) {
+        barrier->flag[thread_id + mask][i] = 1;
+        while (!barrier->flag[thread_id][num_threads - 1]) {
+            asm("" ::
+                    : "memory");
+        }
+        barrier->flag[thread_id][num_threads - 1] = 0;
+    }
+    for (mask >>= 1; mask != 0; mask >>= 1) {
+        barrier->flag[thread_id - mask][num_threads - 1] = 1;
+    }
+}
+
+void Tree_Posix_CV_Init(Tree_Posix_CV_t *barrier, int num_threads){
+    barrier->cv = (pthread_cond_t **)malloc(sizeof(pthread_cond_t *) * num_threads);
+    for (int i = 0; i < num_threads; i++) {
+        barrier->cv[i] = (pthread_cond_t *)malloc(sizeof(pthread_cond_t) * num_threads);
+        for (int j = 0; j < num_threads; j++) {
+            pthread_cond_init(&barrier->cv[i][j], NULL);
+        }
+    }
+}
+
+void Tree_Posix_CV_Wait(Tree_Posix_CV_t *barrier, int thread_id, int num_threads){
+    unsigned int i, mask;
+    for (i = 0, mask = 1; (mask & thread_id) != 0; i++, mask <<= 1) {
+        pthread_cond_wait(&barrier->cv[thread_id][i], &barrier->mutex);
+        pthread_cond_broadcast(&barrier->cv[thread_id][i]);
+    }
+
+    if ((thread_id < num_threads - 1) && (thread_id + mask <= num_threads - 1)) {
+        pthread_cond_broadcast(&barrier->cv[thread_id + mask][i]);
+        pthread_cond_wait(&barrier->cv[thread_id][num_threads - 1], &barrier->mutex);
+        pthread_cond_broadcast(&barrier->cv[thread_id][num_threads - 1]);
+    }
+    for (mask >>= 1; mask != 0; mask >>= 1) {
+        pthread_cond_broadcast(&barrier->cv[thread_id - mask][num_threads - 1]);
+    }
+}
