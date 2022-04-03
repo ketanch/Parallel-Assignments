@@ -5,8 +5,8 @@
 int max(int *arr, int len) {
     int max = arr[0];
     for (int i = 1; i < len; i++) {
-        if (max < arr[i * CACHE_LINE_SIZE])
-            max = arr[i * CACHE_LINE_SIZE];
+        if (max < arr[i * INT_COUNT])
+            max = arr[i * INT_COUNT];
     }
     return max;
 }
@@ -74,37 +74,28 @@ void Release_sema_lock(sem_t *sema_lock) {
 void Init_Lamport_Bakery(int nthread, int **choosing, int **ticket) {
     *ticket = (int *)malloc(nthread * CACHE_LINE_SIZE);
     for (int i = 0; i < nthread; i++) {
-        (*ticket)[i * CACHE_LINE_SIZE] = 0;
+        (*ticket)[i * INT_COUNT] = 0;
     }
     *choosing = (int *)malloc(nthread * CACHE_LINE_SIZE);
     for (int i = 0; i < nthread; i++) {
-        (*choosing)[i * CACHE_LINE_SIZE] = 0;
+        (*choosing)[i * INT_COUNT] = 0;
     }
 }
 
 /*Acquire for Lamport Bakery*/
 void Acquire_Lamport_Bakery(int pid, int nthreads, int *choosing, int *ticket) {
-    choosing[pid * CACHE_LINE_SIZE] = 1;
-    asm("mfence" ::
-            : "memory");
-    ticket[pid * CACHE_LINE_SIZE] = max(ticket, nthreads) + 1;
-    asm("mfence" ::
-            : "memory");
-    choosing[pid * CACHE_LINE_SIZE] = 0;
-    asm("mfence" ::
-            : "memory");
+    choosing[pid * INT_COUNT] = 1;
+    asm("mfence" ::: "memory");
+    ticket[pid * INT_COUNT] = max(ticket, nthreads) + 1;
+    asm("mfence" ::: "memory");
+    choosing[pid * INT_COUNT] = 0;
+    asm("mfence" ::: "memory");
     for (int i = 0; i < nthreads; i++) {
-        while (choosing[i * CACHE_LINE_SIZE]) {
-            asm("" ::
-                    : "memory");
+        while (choosing[i * INT_COUNT]) {
+            asm("" ::: "memory");
         }
-        int ticket_i = ticket[i * CACHE_LINE_SIZE];
-        int ticket_pid = ticket[pid * CACHE_LINE_SIZE];
-        while (ticket_i && (ticket_i < ticket_pid || (ticket_i == ticket_pid && i < pid))) {
-            ticket_i = ticket[i * CACHE_LINE_SIZE];
-            ticket_pid = ticket[pid * CACHE_LINE_SIZE];
-            asm("" ::
-                    : "memory");
+        while (ticket[i * INT_COUNT] && (ticket[i * INT_COUNT] < ticket[pid * INT_COUNT] || (ticket[i * INT_COUNT] == ticket[pid * INT_COUNT] && i < pid))) {
+            asm("" ::: "memory");
         }
     }
 }
@@ -113,7 +104,7 @@ void Acquire_Lamport_Bakery(int pid, int nthreads, int *choosing, int *ticket) {
 void Release_Lamport_Bakery(int pid, int *choosing, int *ticket) {
     asm("" ::
             : "memory");
-    ticket[pid * CACHE_LINE_SIZE] = 0;
+    ticket[pid * INT_COUNT] = 0;
 }
 
 /*Acquire for Spinlock*/
