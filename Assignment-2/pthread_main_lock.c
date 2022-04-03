@@ -1,7 +1,8 @@
-#include "locks.h"
-#include <pthread.h>
 #include <assert.h>
+#include <pthread.h>
 #include <sys/time.h>
+
+#include "locks.h"
 
 #define N 10000000
 
@@ -33,18 +34,18 @@ int arr_index;
 /*Compute functions for each type of lock*/
 /*-----------------------------------------*/
 void *compute_posix(void *param) {
-    int pid = *(int*) param;
+    int pid = *(int *)param;
     for (int i = 0; i < N; i++) {
-        Acquire_pthread_mutex(posix_lock);
+        Acquire_pthread_mutex(&posix_lock);
         assert(x == y);
         x = y + 1;
         y++;
-        Release_pthread_mutex(posix_lock);
+        Release_pthread_mutex(&posix_lock);
     }
 }
 
 void *compute_lamport_bakery(void *param) {
-    int pid = *(int*) param;
+    int pid = *(int *)param;
     for (int i = 0; i < N; i++) {
         Acquire_Lamport_Bakery(pid, nthreads, choosing, ticket);
         assert(x == y);
@@ -55,7 +56,7 @@ void *compute_lamport_bakery(void *param) {
 }
 
 void *compute_spinlock(void *param) {
-    int pid = *(int*) param;
+    int pid = *(int *)param;
     for (int i = 0; i < N; i++) {
         Acquire_Spinlock(&spin_lock);
         assert(x == y);
@@ -66,7 +67,7 @@ void *compute_spinlock(void *param) {
 }
 
 void *compute_tts(void *param) {
-    int pid = *(int*) param;
+    int pid = *(int *)param;
     for (int i = 0; i < N; i++) {
         Acquire_TTS(&tts_lock);
         assert(x == y);
@@ -77,7 +78,7 @@ void *compute_tts(void *param) {
 }
 
 void *compute_ticket_lock(void *param) {
-    int pid = *(int*) param;
+    int pid = *(int *)param;
     for (int i = 0; i < N; i++) {
         Acquire_Ticket_Lock(&tl_ticket, &release_count);
         assert(x == y);
@@ -88,7 +89,7 @@ void *compute_ticket_lock(void *param) {
 }
 
 void *compute_array(void *param) {
-    int pid = *(int*) param;
+    int pid = *(int *)param;
     for (int i = 0; i < N; i++) {
         int th_index = Acquire_Array_Lock(arr_lock, arr_len, &arr_index);
         assert(x == y);
@@ -103,7 +104,7 @@ int main(int argc, char *argv[]) {
     int *id;
     pthread_t *tid;
     struct timeval tv0, tv1;
-	struct timezone tz0, tz1;
+    struct timezone tz0, tz1;
 
     if (argc != 2) {
         printf("Need number of threads.\n");
@@ -126,11 +127,11 @@ int main(int argc, char *argv[]) {
     arr_index = 0;
     /*-----------------------------------------*/
 
-    tid = (pthread_t*) malloc(nthreads * sizeof(pthread_t));
-    id = (int*) malloc(nthreads * sizeof(int));
+    tid = (pthread_t *)malloc(nthreads * sizeof(pthread_t));
+    id = (int *)malloc(nthreads * sizeof(int));
     for (int i = 0; i < nthreads; i++)
         id[i] = i;
-    
+
     /*Benchmarking POSIX mutex lock*/
     x = 0, y = 0;
     gettimeofday(&tv0, &tz0);
@@ -139,13 +140,13 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < nthreads; i++) {
-		pthread_join(tid[i], NULL);
-	}
-    assert (x == y);
-    assert (x == N * nthreads);
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
     gettimeofday(&tv1, &tz1);
     pthread_mutex_destroy(&posix_lock);
-	printf("Lock = POSIX_Lock, time = %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
+    printf("Lock = POSIX_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
 
     /*Benchmarking Lamport Lock*/
     x = 0, y = 0;
@@ -155,13 +156,12 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < nthreads; i++) {
-		pthread_join(tid[i], NULL);
-	}
-    assert (x == y);
-    assert (x == N * nthreads);
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
     gettimeofday(&tv1, &tz1);
-	printf("Lock = Lamport_Lock, time = %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
-
+    printf("Lock = Lamport_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
 
     /*Benchmarking SpinLock*/
     x = 0, y = 0;
@@ -171,13 +171,12 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < nthreads; i++) {
-		pthread_join(tid[i], NULL);
-	}
-    assert (x == y);
-    assert (x == N * nthreads);
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
     gettimeofday(&tv1, &tz1);
-	printf("Lock = Spinlock, time = %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
-
+    printf("Lock = Spinlock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
 
     /*Benchmarking TTS lock*/
     x = 0, y = 0;
@@ -187,13 +186,12 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < nthreads; i++) {
-		pthread_join(tid[i], NULL);
-	}
-    assert (x == y);
-    assert (x == N * nthreads);
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
     gettimeofday(&tv1, &tz1);
-	printf("Lock = TTS_Lock, time = %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
-
+    printf("Lock = TTS_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
 
     /*Benchmarking Ticket Lock*/
     x = 0, y = 0;
@@ -203,13 +201,12 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < nthreads; i++) {
-		pthread_join(tid[i], NULL);
-	}
-    assert (x == y);
-    assert (x == N * nthreads);
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
     gettimeofday(&tv1, &tz1);
-	printf("Lock = Ticket_Lock, time = %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
-
+    printf("Lock = Ticket_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
 
     /*Benchmarking Array Lock*/
     x = 0, y = 0;
@@ -219,12 +216,12 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < nthreads; i++) {
-		pthread_join(tid[i], NULL);
-	}
-    assert (x == y);
-    assert (x == N * nthreads);
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
     gettimeofday(&tv1, &tz1);
-	printf("Lock = Array_Lock, time = %ld microseconds\n", (tv1.tv_sec-tv0.tv_sec)*1000000+(tv1.tv_usec-tv0.tv_usec));
+    printf("Lock = Array_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
 
     return 0;
 }

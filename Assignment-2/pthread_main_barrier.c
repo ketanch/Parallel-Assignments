@@ -8,13 +8,13 @@
 #define N 1000000
 
 int P;
-pthread_barrier_t barrier;
+Tree_Posix_CV_t barrier;
 
 void *forloop(void *p) {
     int tid = *(int *)p;
     int localsense = 1;
     for (int i = 0; i < N; i++) {
-        pthread_barrier_wait(&barrier);
+        Tree_Posix_CV_Wait(&barrier, tid, P);
     }
     return NULL;
 }
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
     gettimeofday(&tv0, &tz0);
 
-    pthread_barrier_init(&barrier, NULL, P);
+    Tree_Posix_CV_Init(&barrier, P);
     tid = (pthread_t *)malloc(P * sizeof(pthread_t));
     pthread_attr_init(&attr);
     int *id = (int *)malloc(P * sizeof(int));

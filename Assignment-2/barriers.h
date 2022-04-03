@@ -1,3 +1,7 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 typedef struct Central_Sense_Reversing_t {
     int counter;
     int flag;
