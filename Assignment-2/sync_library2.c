@@ -6,12 +6,14 @@
 
 const int CACHE_LINE_SIZE = 64;
 
+/* Initialize Centralized sense-reversing barrier using busy-wait on flag  */
 void Central_Sense_Reversing_Init(Central_Sense_Reversing_t *barrier) {
     barrier->counter = 0;
     barrier->flag = 1;
     pthread_mutex_init(&barrier->mutex, NULL);
 }
 
+/* Centralized sense-reversing barrier using busy-wait on flag */
 void Central_Sense_Reversing_Wait(Central_Sense_Reversing_t *barrier, int *localsense, int num_threads) {
     // here localsense must be private to each thread initialized to 1
     *localsense = 1 - *localsense;
@@ -30,12 +32,14 @@ void Central_Sense_Reversing_Wait(Central_Sense_Reversing_t *barrier, int *local
     }
 }
 
+/* Initialize Centralized barrier using POSIX condition variable  */
 void Central_Posix_CV_Init(Central_Posix_CV_t *barrier) {
     barrier->counter = 0;
     pthread_cond_init(&barrier->cv, NULL);
     pthread_mutex_init(&barrier->mutex, NULL);
 }
 
+/* Centralized barrier using POSIX condition variable  */
 void Central_Posix_CV_Wait(Central_Posix_CV_t *barrier, int num_threads) {
     pthread_mutex_lock(&barrier->mutex);
     barrier->counter++;
@@ -48,6 +52,7 @@ void Central_Posix_CV_Wait(Central_Posix_CV_t *barrier, int num_threads) {
     pthread_mutex_unlock(&barrier->mutex);
 }
 
+/* Initialize Tree barrier using busy-wait on flags  */
 void Tree_Sense_Reversing_Init(Tree_Sense_Reversing_t *barrier, int num_threads) {
     barrier->flag = (int **)malloc(sizeof(int *) * num_threads);
     for (int i = 0; i < num_threads; i++) {
@@ -59,6 +64,7 @@ void Tree_Sense_Reversing_Init(Tree_Sense_Reversing_t *barrier, int num_threads)
     }
 }
 
+/* Tree barrier using busy-wait on flags  */
 void Tree_Sense_Reversing_Wait(Tree_Sense_Reversing_t *barrier, int thread_id, int num_threads) {
     unsigned int i, mask;
     for (i = 0, mask = 1; (mask & thread_id) != 0; i++, mask <<= 1) {
