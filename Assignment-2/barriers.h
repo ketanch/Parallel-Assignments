@@ -25,5 +25,5 @@ void Central_Posix_CV_Init(Central_Posix_CV_t *barrier);
 void Central_Posix_CV_Wait(Central_Posix_CV_t *barrier, int num_threads);
 void Tree_Sense_Reversing_Init(Tree_Sense_Reversing_t *barrier, int num_threads);
 void Tree_Sense_Reversing_Wait(Tree_Sense_Reversing_t *barrier, int thread_id, int num_threads);
-void Tree_Posix_CV_Init(Tree_Posix_CV_t *barrier, int num_threads);
-void Tree_Posix_CV_Wait(Tree_Posix_CV_t *barrier, int thread_id, int num_threads);
+// void Tree_Posix_CV_Init(Tree_Posix_CV_t *barrier, int num_threads);
+// void Tree_Posix_CV_Wait(Tree_Posix_CV_t *barrier, int thread_id, int num_threads);

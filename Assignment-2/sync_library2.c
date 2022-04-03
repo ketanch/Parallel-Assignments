@@ -6,13 +6,13 @@
 
 const int CACHE_LINE_SIZE = 64;
 
-void Central_Sense_Reversing_Init(struct Central_Sense_Reversing_t *barrier) {
+void Central_Sense_Reversing_Init(Central_Sense_Reversing_t *barrier) {
     barrier->counter = 0;
     barrier->flag = 1;
     pthread_mutex_init(&barrier->mutex, NULL);
 }
 
-void Central_Sense_Reversing_Wait(struct Central_Sense_Reversing_t *barrier, int *localsense, int num_threads) {
+void Central_Sense_Reversing_Wait(Central_Sense_Reversing_t *barrier, int *localsense, int num_threads) {
     // here localsense must be private to each thread initialized to 1
     *localsense = 1 - *localsense;
     pthread_mutex_lock(&barrier->mutex);
@@ -54,7 +54,7 @@ void Tree_Sense_Reversing_Init(Tree_Sense_Reversing_t *barrier, int num_threads)
         barrier->flag[i] = (int *)malloc(sizeof(int) * num_threads * CACHE_LINE_SIZE);
 
         for (int j = 0; j < num_threads; j++) {
-            barrier->flag[i][j*CACHE_LINE_SIZE] = 0;
+            barrier->flag[i][j * CACHE_LINE_SIZE] = 0;
         }
     }
 }
@@ -62,23 +62,23 @@ void Tree_Sense_Reversing_Init(Tree_Sense_Reversing_t *barrier, int num_threads)
 void Tree_Sense_Reversing_Wait(Tree_Sense_Reversing_t *barrier, int thread_id, int num_threads) {
     unsigned int i, mask;
     for (i = 0, mask = 1; (mask & thread_id) != 0; i++, mask <<= 1) {
-        while (!barrier->flag[thread_id][i*CACHE_LINE_SIZE]) {
+        while (!barrier->flag[thread_id][i * CACHE_LINE_SIZE]) {
             asm("" ::
                     : "memory");
         }
-        barrier->flag[thread_id][i*CACHE_LINE_SIZE] = 0;
+        barrier->flag[thread_id][i * CACHE_LINE_SIZE] = 0;
     }
 
     if ((thread_id < num_threads - 1) && (thread_id + mask <= num_threads - 1)) {
-        barrier->flag[thread_id + mask][i*CACHE_LINE_SIZE] = 1;
-        while (!barrier->flag[thread_id][(num_threads - 1)*CACHE_LINE_SIZE]) {
+        barrier->flag[thread_id + mask][i * CACHE_LINE_SIZE] = 1;
+        while (!barrier->flag[thread_id][(num_threads - 1) * CACHE_LINE_SIZE]) {
             asm("" ::
                     : "memory");
         }
-        barrier->flag[thread_id][(num_threads - 1)*CACHE_LINE_SIZE] = 0;
+        barrier->flag[thread_id][(num_threads - 1) * CACHE_LINE_SIZE] = 0;
     }
     for (mask >>= 1; mask != 0; mask >>= 1) {
-        barrier->flag[thread_id - mask][(num_threads - 1)*CACHE_LINE_SIZE] = 1;
+        barrier->flag[thread_id - mask][(num_threads - 1) * CACHE_LINE_SIZE] = 1;
     }
 }
 

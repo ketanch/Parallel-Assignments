@@ -8,12 +8,13 @@
 #define N 1000000
 
 int P;
-Tree_Sense_Reversing_t barrier;
+Central_Sense_Reversing_t barrier;
 
 void *forloop(void *p) {
     int tid = *(int *)p;
+    int localsense = 1;
     for (int i = 0; i < N; i++) {
-        Tree_Sense_Reversing_Wait(&barrier, tid, P);
+        Central_Sense_Reversing_Wait(&barrier, &localsense, P);
     }
     return NULL;
 }
@@ -28,7 +29,7 @@ int main(int argc, char **argv) {
 
     gettimeofday(&tv0, &tz0);
 
-    Tree_Sense_Reversing_Init(&barrier, P);
+    Central_Sense_Reversing_Init(&barrier);
     tid = (pthread_t *)malloc(P * sizeof(pthread_t));
     pthread_attr_init(&attr);
     int *id = (int *)malloc(P * sizeof(int));
