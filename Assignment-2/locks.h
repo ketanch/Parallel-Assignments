@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
 #define CACHE_LINE_SIZE 64
 
@@ -23,3 +24,6 @@ void Release_Array_Lock(char *lock_addr, int th_index, int);
 
 void Acquire_pthread_mutex(pthread_mutex_t *lock);
 void Release_pthread_mutex(pthread_mutex_t *lock);
+
+void Acquire_sema_lock(sem_t *sema_lock);
+void Release_sema_lock(sem_t *sema_lock);

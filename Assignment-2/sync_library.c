@@ -60,6 +60,16 @@ void Release_pthread_mutex(pthread_mutex_t *lock) {
     pthread_mutex_unlock(lock);
 }
 
+/*Acquire for Semaphore*/
+void Acquire_sema_lock(sem_t *sema_lock) {
+    sem_wait(sema_lock);
+}
+
+/*Require for Semaphore*/
+void Release_sema_lock(sem_t *sema_lock) {
+    sem_post(sema_lock);
+}
+
 /*Initializes arrays for Lamport Bakery*/
 void Init_Lamport_Bakery(int nthread, int **choosing, int **ticket) {
     *ticket = (int *)malloc(nthread * CACHE_LINE_SIZE);

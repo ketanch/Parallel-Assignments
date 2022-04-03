@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <pthread.h>
 #include <sys/time.h>
-
 #include "locks.h"
 
 #define N 10000000
@@ -11,6 +10,9 @@ int x = 0, y = 0;
 
 /*POSIX lock*/
 pthread_mutex_t posix_lock;
+
+/*Binary Semaphore*/
+sem_t sema_lock;
 
 /*Lamport Bakery data*/
 int *choosing;
@@ -41,6 +43,17 @@ void *compute_posix(void *param) {
         x = y + 1;
         y++;
         Release_pthread_mutex(&posix_lock);
+    }
+}
+
+void *compute_semaphore(void *param) {
+    int pid = *(int *)param;
+    for (int i = 0; i < N; i++) {
+        Acquire_sema_lock(&sema_lock);
+        assert(x == y);
+        x = y + 1;
+        y++;
+        Release_sema_lock(&sema_lock);
     }
 }
 
@@ -117,6 +130,7 @@ int main(int argc, char *argv[]) {
         printf("Mutex initialization failed\n");
         exit(1);
     }
+    sem_init(&sema_lock, 0, 1);
     Init_Lamport_Bakery(nthreads, &choosing, &ticket);
     spin_lock = 0;
     tts_lock = 0;
@@ -147,6 +161,24 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tv1, &tz1);
     pthread_mutex_destroy(&posix_lock);
     printf("Lock = POSIX_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
+
+
+    /*Benchmarking semaphore lock*/
+    x = 0, y = 0;
+    gettimeofday(&tv0, &tz0);
+    for (int i = 0; i < nthreads; i++) {
+        pthread_create(&tid[i], NULL, compute_semaphore, &id[i]);
+    }
+
+    for (int i = 0; i < nthreads; i++) {
+        pthread_join(tid[i], NULL);
+    }
+    assert(x == y);
+    assert(x == N * nthreads);
+    gettimeofday(&tv1, &tz1);
+    sem_destroy(&sema_lock);
+    printf("Lock = Semaphore_Lock, time = %ld microseconds\n", (tv1.tv_sec - tv0.tv_sec) * 1000000 + (tv1.tv_usec - tv0.tv_usec));
+
 
     /*Benchmarking Lamport Lock*/
     x = 0, y = 0;

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-gcc -O3 -fopenmp omp_main_lock.c sync_library1.c -o openmp_bench
-gcc -O3 -pthread pthread_main_lock.c sync_library1.c -o pthread_bench
+gcc -O3 -fopenmp omp_main_lock.c sync_library.c -o openmp_bench
+gcc -O3 -pthread pthread_main_lock.c sync_library.c -o pthread_bench
 
 
 
