@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <sys/time.h>
 
-#define N 1000000
+#define N 10000000
 
 int nthreads;
 int x = 0, y = 0;
@@ -35,11 +35,11 @@ int arr_index;
 void *compute_posix(void *param) {
     int pid = *(int*) param;
     for (int i = 0; i < N; i++) {
-        pthread_mutex_lock(&posix_lock);
+        Acquire_pthread_mutex(posix_lock);
         assert(x == y);
         x = y + 1;
         y++;
-        pthread_mutex_unlock(&posix_lock);
+        Release_pthread_mutex(posix_lock);
     }
 }
 

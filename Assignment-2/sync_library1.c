@@ -39,15 +39,26 @@ int TestAndSet(int *addr) {
 
 /*Implements fetch and increment using cmpxchg*/
 int FetchAndInc(int *addr) {
+    int old_val, new_val, res;
 GetLock:
-    int old_val = *addr;
-    int new_val = old_val + 1;
-    int res = CompareAndSet(old_val, new_val, addr);
+    old_val = *addr;
+    new_val = old_val + 1;
+    res = CompareAndSet(old_val, new_val, addr);
     if (!res)
         goto GetLock;
     
     return old_val;
     
+}
+
+/* Acquire for POSIX mutex */
+void Acquire_pthread_mutex (pthread_mutex_t lock) {
+    pthread_mutex_lock(&lock);
+}
+
+/* Release for POSIX mutex */
+void Release_pthread_mutex (pthread_mutex_t lock) {
+    pthread_mutex_unlock(&lock);
 }
 
 /*Initializes arrays for Lamport Bakery*/
@@ -103,8 +114,9 @@ void Release_Spinlock(int *lock_addr) {
 
 /*Acquire for Test & test & set Lock*/
 void Acquire_TTS(int *addr) {
+    int reg_val;
 Lock:
-    int reg_val = TestAndSet(addr);
+    reg_val = TestAndSet(addr);
     if (reg_val == 0) return;
     while (*addr != 0) {
         asm ("":::"memory");

@@ -3,7 +3,7 @@
 #include <sys/time.h>
 #include <omp.h>
 
-#define N 1000000
+#define N 10000000
 
 int nthreads;
 int x = 0, y = 0;
