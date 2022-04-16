@@ -4,6 +4,7 @@
 #include <semaphore.h>
 
 #define CACHE_LINE_SIZE 64
+#define INT_COUNT 16
 
 void Init_Lamport_Bakery(int nthread, int **choosing, int **ticket);
 void Acquire_Lamport_Bakery(int pid, int nthreads, int *choosing, int *ticket);
