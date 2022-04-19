@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.py": "python",
+        "climits": "cpp",
+        "pthread.h": "c",
+        "barriers.h": "c",
+        "stdlib.h": "c",
+        "shared_mutex": "c",
+        "stdio.h": "c",
+        "locks.h": "c",
+        "cmath": "cpp"
+    }
+}
