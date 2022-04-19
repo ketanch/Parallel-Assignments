@@ -30,6 +30,7 @@ __global__ void solve(float *A, int n, int span) {
     int id = threadIdx.x + blockIdx.x * blockDim.x;
     int done = 0, iters = 0;
     float temp, local_diff;
+    __shared__ float local_diff2[THREADS_PER_BLOCK / 32];
     cg::grid_group grid = cg::this_grid();
     while (!done) {
         local_diff = 0.0;
@@ -52,19 +53,38 @@ __global__ void solve(float *A, int n, int span) {
 
             local_diff += fabs(A[i * n + j] - temp);
         }
-        atomicAdd(&diff, local_diff);
+        unsigned mask = 0xffffffff;
+        for (int i = warpSize / 2; i > 0; i = i / 2) {
+            local_diff += __shfl_down_sync(mask, local_diff, i);
+        }
+        if (threadIdx.x % warpSize == 0) {
+            local_diff2[threadIdx.x / warpSize] = local_diff;
+            // atomicAdd(&diff, local_diff);
+        }
+        __syncthreads();
+        if ((threadIdx.x / (THREADS_PER_BLOCK / warpSize)) == 0) {
+            local_diff = local_diff2[threadIdx.x];
+            for (int i = THREADS_PER_BLOCK / (2 * warpSize); i > 0; i = i / 2) {
+                local_diff += __shfl_down_sync(mask, local_diff, i);
+            }
+            if (threadIdx.x == 0) {
+                atomicAdd(&diff, local_diff);
+            }
+        }
 
         grid.sync();
         iters++;
 
-        if ((diff / (n * n) < TOL) || (iters == ITER_LIMIT)) {
+        if (((diff / (n * n) < TOL) || (iters == ITER_LIMIT))) {
             done = 1;
+            // printf("id: %d, iters: %d\n", id, iters);
+            // grid.sync();
         }
-        grid.sync();
 
         if (id == 0) {
             printf("[%d] diff = %.10f\n", iters, diff / (n * n));
         }
+        grid.sync();
     }
 }
 

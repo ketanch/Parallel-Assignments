@@ -52,19 +52,27 @@ __global__ void solve(float *A, int n, int span) {
 
             local_diff += fabs(A[i * n + j] - temp);
         }
-        atomicAdd(&diff, local_diff);
+        unsigned mask = 0xffffffff;
+        for (int i = warpSize / 2; i > 0; i = i / 2) {
+            local_diff += __shfl_down_sync(mask, local_diff, i);
+        }
+        if (threadIdx.x % 32 == 0) {
+            atomicAdd(&diff, local_diff);
+        }
 
         grid.sync();
         iters++;
 
-        if ((diff / (n * n) < TOL) || (iters == ITER_LIMIT)) {
+        if (((diff / (n * n) < TOL) || (iters == ITER_LIMIT))) {
             done = 1;
+            // printf("id: %d, iters: %d\n", id, iters);
+            // grid.sync();
         }
-        grid.sync();
 
         if (id == 0) {
             printf("[%d] diff = %.10f\n", iters, diff / (n * n));
         }
+        grid.sync();
     }
 }
 
