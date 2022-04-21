@@ -9,7 +9,7 @@
 #include <sys/time.h>
 namespace cg = cooperative_groups;
 
-#define THREADS_PER_BLOCK 32
+#define THREADS_PER_BLOCK 16
 #define TOL 1e-5
 #define ITER_LIMIT 1000
 
