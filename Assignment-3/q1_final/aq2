@@ -1,0 +1,25 @@
+Max number of blocks per SM: 4, number of SMs: 28, number of blocks: 112
+Number of blocks: 4, Threads per block: 256, Total number of threads: 1024
+nthreads: 32
+[371] diff = 0.0000099800
+Time: 17.443625 seconds
+Max number of blocks per SM: 4, number of SMs: 28, number of blocks: 112
+Number of blocks: 8, Threads per block: 256, Total number of threads: 2048
+nthreads: 32
+[371] diff = 0.0000099864
+Time: 9.799585 seconds
+Max number of blocks per SM: 4, number of SMs: 28, number of blocks: 112
+Number of blocks: 16, Threads per block: 256, Total number of threads: 4096
+nthreads: 64
+[373] diff = 0.0000099603
+Time: 6.349383 seconds
+Max number of blocks per SM: 4, number of SMs: 28, number of blocks: 112
+Number of blocks: 32, Threads per block: 256, Total number of threads: 8192
+nthreads: 64
+[370] diff = 0.0000099743
+Time: 7.236222 seconds
+Max number of blocks per SM: 4, number of SMs: 28, number of blocks: 112
+Number of blocks: 64, Threads per block: 256, Total number of threads: 16384
+nthreads: 128
+[366] diff = 0.0000099879
+Time: 4.402407 seconds
