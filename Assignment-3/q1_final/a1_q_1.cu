@@ -61,9 +61,9 @@ __global__ void solve(float *A, int n, int span) {
                 int tileIdy = outerTileIdy * span + l;
                 int idx = tileIdx * THREADS_PER_BLOCK_X + threadIdx.x + 1;
                 int idy = tileIdy * THREADS_PER_BLOCK_Y + threadIdx.y + 1;
-                temp = A[idx * n + idy];
-                A[idx * n + idy] = 0.2 * (A[idx * n + idy] + A[idx * n + idy - 1] + A[idx * n + idy + 1] + A[(idx + 1) * n + idy] + A[(idx - 1) * n + idy]);
-                local_diff += fabs(A[idx * n + idy] - temp);
+                temp = A[idx * (n + 2) + idy];
+                A[idx * (n + 2) + idy] = 0.2 * (A[idx * (n + 2) + idy] + A[idx * (n + 2) + idy - 1] + A[idx * (n + 2) + idy + 1] + A[(idx + 1) * (n + 2) + idy] + A[(idx - 1) * (n + 2) + idy]);
+                local_diff += fabs(A[idx * (n + 2) + idy] - temp);
             }
         }
         atomicAdd(&diff, local_diff);
@@ -108,9 +108,9 @@ __global__ void solve1(float *A, int n, int span) {
                 int tileIdy = outerTileIdy * span + l;
                 int idx = tileIdx * THREADS_PER_BLOCK_X + threadIdx.x + 1;
                 int idy = tileIdy * THREADS_PER_BLOCK_Y + threadIdx.y + 1;
-                temp = A[idx * n + idy];
-                A[idx * n + idy] = 0.2 * (A[idx * n + idy] + A[idx * n + idy - 1] + A[idx * n + idy + 1] + A[(idx + 1) * n + idy] + A[(idx - 1) * n + idy]);
-                local_diff += fabs(A[idx * n + idy] - temp);
+                temp = A[idx * (n + 2) + idy];
+                A[idx * (n + 2) + idy] = 0.2 * (A[idx * (n + 2) + idy] + A[idx * (n + 2) + idy - 1] + A[idx * (n + 2) + idy + 1] + A[(idx + 1) * (n + 2) + idy] + A[(idx - 1) * (n + 2) + idy]);
+                local_diff += fabs(A[idx * (n + 2) + idy] - temp);
             }
         }
         atomicAdd(&diff, local_diff);

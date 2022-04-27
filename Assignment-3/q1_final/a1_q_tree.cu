@@ -62,9 +62,9 @@ __global__ void solve(float *A, int n, int span) {
                 int tileIdy = outerTileIdy * span + l;
                 int idx = tileIdx * THREADS_PER_BLOCK_X + threadIdx.x + 1;
                 int idy = tileIdy * THREADS_PER_BLOCK_Y + threadIdx.y + 1;
-                temp = A[idx * n + idy];
-                A[idx * n + idy] = 0.2 * (A[idx * n + idy] + A[idx * n + idy - 1] + A[idx * n + idy + 1] + A[(idx + 1) * n + idy] + A[(idx - 1) * n + idy]);
-                local_diff += fabs(A[idx * n + idy] - temp);
+                temp = A[idx * (n + 2) + idy];
+                A[idx * (n + 2) + idy] = 0.2 * (A[idx * (n + 2) + idy] + A[idx * (n + 2) + idy - 1] + A[idx * (n + 2) + idy + 1] + A[(idx + 1) * (n + 2) + idy] + A[(idx - 1) * (n + 2) + idy]);
+                local_diff += fabs(A[idx * (n + 2) + idy] - temp);
             }
         }
         int id = threadIdx.y * blockDim.x + threadIdx.x;
@@ -111,7 +111,7 @@ __global__ void solve1(float *A, int n, int span) {
     __shared__ float local_diff2[(THREADS_PER_BLOCK_X * THREADS_PER_BLOCK_Y) / 32];
     while (!done) {
         local_diff = 0.0;
-        if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
+        if (blockIdx.x == 0 && blockIdx.y == 0 && blockIdx.z == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
             diff = 0.0;
         }
 
@@ -128,9 +128,9 @@ __global__ void solve1(float *A, int n, int span) {
                 int tileIdy = outerTileIdy * span + l;
                 int idx = tileIdx * THREADS_PER_BLOCK_X + threadIdx.x + 1;
                 int idy = tileIdy * THREADS_PER_BLOCK_Y + threadIdx.y + 1;
-                temp = A[idx * n + idy];
-                A[idx * n + idy] = 0.2 * (A[idx * n + idy] + A[idx * n + idy - 1] + A[idx * n + idy + 1] + A[(idx + 1) * n + idy] + A[(idx - 1) * n + idy]);
-                local_diff += fabs(A[idx * n + idy] - temp);
+                temp = A[idx * (n + 2) + idy];
+                A[idx * (n + 2) + idy] = 0.2 * (A[idx * (n + 2) + idy] + A[idx * (n + 2) + idy - 1] + A[idx * (n + 2) + idy + 1] + A[(idx + 1) * (n + 2) + idy] + A[(idx - 1) * (n + 2) + idy]);
+                local_diff += fabs(A[idx * (n + 2) + idy] - temp);
             }
         }
         int id = threadIdx.y * blockDim.x + threadIdx.x;
@@ -158,7 +158,7 @@ __global__ void solve1(float *A, int n, int span) {
 
         if (((diff / (n * n) < TOL) || (iters == ITER_LIMIT))) {
             done = 1;
-            if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
+            if (blockIdx.x == 0 && blockIdx.y == 0 && blockIdx.z == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
                 printf("[%d] diff = %.10f\n", iters, diff / (n * n));
             }
         }
